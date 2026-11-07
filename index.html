@@ -460,32 +460,36 @@ let products = JSON.parse(localStorage.getItem('nuri_products_v2')) || [];
             e.preventDefault();
             const name = document.getElementById('prodName').value;
             const price = parseFloat(document.getElementById('prodPrice').value);
-            const oldPrice = parseFloat(document.getElementById('prodOldPrice').value) || null;
-            const category = document.getElementById('prodCategory').value;
-            const image = uploadedImageBase64;
+function handleProductUpload(e) {
+    e.preventDefault();
+    const name = document.getElementById('prodName').value;
+    const price = parseFloat(document.getElementById('prodPrice').value);
+    const oldPrice = parseFloat(document.getElementById('prodOldPrice').value) || null;
+    const category = document.getElementById('prodCategory').value;
+    const stockStatus = document.getElementById('prodStock') ? document.getElementById('prodStock').value : 'In Stock';
+    const image = uploadedImageBase64;
 
-            const newProduct = {
-                id: Date.now(),
-                name,
-                price,
-                oldPrice,
-                category,
-                rating: 5.0,
-                reviews: 1,
-                image
-            };
+    const newProduct = {
+        id: Date.now(),
+        name,
+        price,
+        oldPrice,
+        category,
+        stock: stockStatus,
+        rating: 5.0,
+        reviews: 1,
+        image
+    };
 
-            products.unshift(newProduct);
-            renderProducts();
-            alert('Product added successfully to store!');
-            e.target.reset();
-            switchTab('home');
-        }
+    products.unshift(newProduct);
+    localStorage.setItem('nuri_products_v2', JSON.stringify(products));
 
-        // Navigation Tabs Switcher
-        function switchTab(tab) {
-            document.querySelectorAll('.tab-content').forEach(el => el.classList.add('hidden'));
-            document.getElementById(tab + 'Tab').classList.remove('hidden');
+    renderProducts();
+    alert('Product added successfully to store!');
+    e.target.reset();
+    switchTab('home');
+}
+            
 
             ['Home', 'Cart', 'Profile'].forEach(t => {
                 const nav = document.getElementById('nav' + t);
