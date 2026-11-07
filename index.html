@@ -279,13 +279,9 @@
             name: 'Taahsib',
             isAdmin: false
         };
-
-        let products = [
-            { id: 1, name: 'Wireless Bluetooth Earbuds', price: 1450, oldPrice: 2200, category: 'Electronics', rating: 4.8, reviews: 124, image: 'https://images.unsplash.com/photo-1590658268037-6bf12165a8df?w=400' },
-            { id: 2, name: 'Stylish Casual Sneakers', price: 2100, oldPrice: 3500, category: 'Fashion', rating: 4.6, reviews: 89, image: 'https://images.unsplash.com/photo-1542291026-7eec264c27ff?w=400' },
-            { id: 3, name: 'Smart Fitness Watch V8', price: 2800, oldPrice: 4200, category: 'Electronics', rating: 4.9, reviews: 210, image: 'https://images.unsplash.com/photo-1523275335684-37898b6baf30?w=400' },
-            { id: 4, name: 'Modern Desk Lamp', price: 950, oldPrice: 1600, category: 'Home & Living', rating: 4.5, reviews: 45, image: 'https://images.unsplash.com/photo-1507473885765-e6ed057f782c?w=400' }
-        ];
+   
+// লোকাল স্টোরেজ থেকে প্রোডাক্ট লোড করবে, না থাকলে একদম খালি থাকবে
+let products = JSON.parse(localStorage.getItem('nuri_products')) || [];
 
         let cart = [];
         let orders = [];
