@@ -1,4 +1,3 @@
-
 <!DOCTYPE html>
 <html lang="bn">
 <head>
@@ -9,6 +8,11 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <!-- FontAwesome Icons -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <!-- Firebase App & Auth SDK (Compat Version) -->
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
+
     <style>
         @keyframes slideDown {
             0% { transform: translateY(-100%); opacity: 0; }
@@ -146,28 +150,24 @@
             <!-- User Info Card -->
             <div class="bg-white p-4 rounded-2xl shadow-sm border flex items-center justify-between">
                 <div class="flex items-center space-x-3">
-                    <div class="w-12 h-12 rounded-full bg-orange-100 text-orange-600 flex items-center justify-center font-bold text-lg">
+                    <div id="userAvatar" class="w-12 h-12 rounded-full bg-orange-100 text-orange-600 flex items-center justify-center font-bold text-lg overflow-hidden">
                         <i class="fas fa-user"></i>
                     </div>
                     <div>
-                        <h3 class="font-bold text-sm text-gray-800">Taahsib User</h3>
+                        <h3 id="userNameDisplay" class="font-bold text-sm text-gray-800">Taahsib User</h3>
                         <span id="userRoleBadge" class="text-[10px] bg-gray-100 text-gray-600 px-2 py-0.5 rounded-full font-semibold">User</span>
                     </div>
                 </div>
                 <button onclick="promptAdminLogin()" class="bg-gray-900 text-white text-xs font-bold px-3 py-2 rounded-xl">Admin Access</button>
             </div>
 
-            <!-- Social Login Simulation -->
+            <!-- Real Google Login Button -->
             <div class="bg-white p-4 rounded-2xl shadow-sm border text-center">
-                <p class="text-xs text-gray-500 mb-3">Login with Social Accounts</p>
-                <div class="grid grid-cols-2 gap-3">
-                    <button onclick="socialLogin('Google')" class="border py-2 rounded-xl text-xs font-semibold flex items-center justify-center space-x-2 hover:bg-gray-50">
-                        <i class="fab fa-google text-red-500"></i> <span>Google</span>
-                    </button>
-                    <button onclick="socialLogin('Facebook')" class="border py-2 rounded-xl text-xs font-semibold flex items-center justify-center space-x-2 hover:bg-gray-50">
-                        <i class="fab fa-facebook text-blue-600"></i> <span>Facebook</span>
-                    </button>
-                </div>
+                <p class="text-xs text-gray-500 mb-3">Sign in with your Google Account</p>
+                <button onclick="loginWithGoogle()" class="w-full border py-2.5 rounded-xl text-xs font-semibold flex items-center justify-center space-x-2 hover:bg-gray-50 shadow-sm transition">
+                    <i class="fab fa-google text-red-500 text-sm"></i> 
+                    <span>Continue with Google</span>
+                </button>
             </div>
 
             <!-- Admin Product Upload Form (Conditional) -->
@@ -248,8 +248,23 @@
         </button>
     </nav>
 
-    <!-- Application Logic Script -->
+    <!-- Application Logic Script with Firebase Real Google Auth -->
     <script>
+        // Firebase Real Configuration from User Console
+        const firebaseConfig = {
+            apiKey: "AIzaSyD-xxxxxxxxxxxxxxxxxxxxxxxxxxxx",
+            authDomain: "nuritaahsibmart.firebaseapp.com",
+            projectId: "nuritaahsibmart",
+            storageBucket: "nuritaahsibmart.appspot.com",
+            messagingSenderId: "571687256084",
+            appId: "1:571687256084:web:ff9c3fde4c0b2f07d3a8f7"
+        };
+
+        // Initialize Firebase
+        firebase.initializeApp(firebaseConfig);
+        const auth = firebase.auth();
+        const googleProvider = new firebase.auth.GoogleAuthProvider();
+
         let currentUser = {
             name: 'Taahsib User',
             isAdmin: false
@@ -258,6 +273,26 @@
         let products = JSON.parse(localStorage.getItem('nuri_products_v2')) || [];
         let cart = [];
         let orders = [];
+
+        // Real Google Login Function
+        function loginWithGoogle() {
+            auth.signInWithPopup(googleProvider)
+                .then((result) => {
+                    const user = result.user;
+                    currentUser.name = user.displayName;
+                    
+                    // Update Profile UI
+                    document.getElementById('userNameDisplay').innerText = user.displayName;
+                    if(user.photoURL) {
+                        document.getElementById('userAvatar').innerHTML = `<img src="${user.photoURL}" class="w-full h-full object-cover">`;
+                    }
+                    alert(`Welcome, ${user.displayName}! Google login successful.`);
+                })
+                .catch((error) => {
+                    console.error("Login Error:", error);
+                    alert("Google Login Failed: " + error.message);
+                });
+        }
 
         // Render Products
         function renderProducts(items = products) {
@@ -423,7 +458,7 @@
             document.getElementById('productModal').classList.add('hidden');
         }
 
-        // Admin Security Check with Password
+        // Admin Security Check with Password (`taahsibnuri009`)
         function promptAdminLogin() {
             const pass = prompt("Enter Admin Password:");
             if (pass === "taahsibnuri009") {
@@ -450,24 +485,21 @@
             }
         }
 
-        // Social Login Simulation
-        function socialLogin(provider) {
-            currentUser.name = `${provider} User`;
-            alert(`Successfully logged in with ${provider}!`);
-        }
-
         // Handle Product Upload (Admin Only)
         let uploadedImageBase64 = "";
-        document.getElementById('productImageInput').addEventListener('change', function(e) {
-            const file = e.target.files[0];
-            if (file) {
-                const reader = new FileReader();
-                reader.onload = function(event) {
-                    uploadedImageBase64 = event.target.result;
-                };
-                reader.readAsDataURL(file);
-            }
-        });
+        const imageInput = document.getElementById('productImageInput');
+        if(imageInput) {
+            imageInput.addEventListener('change', function(e) {
+                const file = e.target.files[0];
+                if (file) {
+                    const reader = new FileReader();
+                    reader.onload = function(event) {
+                        uploadedImageBase64 = event.target.result;
+                    };
+                    reader.readAsDataURL(file);
+                }
+            });
+        }
 
         function handleProductUpload(e) {
             e.preventDefault();
