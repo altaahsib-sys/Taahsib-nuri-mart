@@ -234,7 +234,8 @@
                     </div>
                     <div>
                         <label class="block text-xs font-semibold mb-1">Image URL</label>
-                        <input type="url" id="prodImage" required placeholder="https://images.unsplash.com/..." class="w-full p-2.5 border rounded-lg text-sm">
+                        <input type="file" id="productImageInput" accept="image/*">
+
                     </div>
                     <button type="submit" class="w-full bg-green-600 text-white font-bold py-2.5 rounded-lg hover:bg-green-700 transition">
                         Upload Product to Store
@@ -466,7 +467,7 @@
             const price = parseFloat(document.getElementById('prodPrice').value);
             const oldPrice = parseFloat(document.getElementById('prodOldPrice').value) || null;
             const category = document.getElementById('prodCategory').value;
-            const image = document.getElementById('prodImage').value;
+            const image = uploadedImageBase64;
 
             const newProduct = {
                 id: Date.now(),
@@ -503,10 +504,10 @@
             });
         }
 
-        // Initialize App
-        window.onload = function() {
-            renderProducts();
-            updateCartUI();
+// Initialize App
+window.onload = function() {
+    renderProducts();
+    updateCartUI();
     checkAdminRole();
 };
 
@@ -522,8 +523,6 @@ document.getElementById('productImageInput').addEventListener('change', function
         reader.readAsDataURL(file);
     }
 });
-            checkAdminRole();
-        };
-    </script>
+</script>
 </body>
 </html>
