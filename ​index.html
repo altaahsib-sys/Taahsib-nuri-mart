@@ -1,0 +1,570 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Nuri Taahsib Mart</title>
+    <!-- Tailwind CSS & FontAwesome -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <!-- Firebase SDKs -->
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+
+    <style>
+        /* iOS Glassmorphism Style */
+        .glass-nav {
+            background: rgba(255, 255, 255, 0.75);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border-top: 1px solid rgba(255, 255, 255, 0.4);
+            box-shadow: 0 -10px 25px rgba(0, 0, 0, 0.05);
+        }
+        .glass-card {
+            background: rgba(255, 255, 255, 0.85);
+            backdrop-filter: blur(15px);
+            -webkit-backdrop-filter: blur(15px);
+            border: 1px solid rgba(255, 255, 255, 0.6);
+        }
+
+        /* Shopping Bag Entrance Animation */
+        @keyframes bagAnimation {
+            0% { transform: scale(0.6); opacity: 0; }
+            30% { transform: scale(1.1); opacity: 1; }
+            40% { transform: scale(1); }
+            85% { transform: scale(1); opacity: 1; }
+            100% { transform: scale(0.5); opacity: 0; }
+        }
+        @keyframes textEmerge {
+            0% { transform: translateY(40px) scale(0.5); opacity: 0; }
+            30% { transform: translateY(-30px) scale(1.1); opacity: 1; }
+            45% { transform: translateY(-20px) scale(1); }
+            75% { transform: translateY(-20px) scale(1); opacity: 1; }
+            95% { transform: translateY(30px) scale(0.5); opacity: 0; }
+        }
+
+        .animate-bag { animation: bagAnimation 3.5s cubic-bezier(0.4, 0, 0.2, 1) forwards; }
+        .animate-text { animation: textEmerge 3.5s cubic-bezier(0.4, 0, 0.2, 1) forwards; }
+    </style>
+</head>
+<body class="bg-slate-100 min-h-screen text-slate-800 pb-24 font-sans select-none">
+
+    <!-- Shopping Bag Splash Screen -->
+    <div id="splashScreen" class="fixed inset-0 bg-gradient-to-br from-orange-500 via-pink-500 to-purple-600 z-50 flex flex-col items-center justify-center overflow-hidden">
+        <div class="relative flex flex-col items-center justify-center">
+            <!-- Text Emerging from Bag -->
+            <div class="animate-text z-0 text-center mb-[-20px]">
+                <h1 class="text-3xl font-extrabold text-white drop-shadow-md tracking-wide">Nuri Taahsib Mart</h1>
+                <p class="text-xs text-orange-100 font-medium tracking-widest mt-1">EXCLUSIVE STORE</p>
+            </div>
+            
+            <!-- Shopping Bag Icon -->
+            <div class="animate-bag z-10 text-white drop-shadow-2xl">
+                <i class="fas fa-shopping-bag text-8xl"></i>
+            </div>
+        </div>
+    </div>
+
+    <!-- Header App Bar -->
+    <header class="sticky top-0 z-30 bg-white/80 backdrop-blur-md border-b border-gray-200/60 px-4 py-3 flex items-center justify-between">
+        <div class="flex items-center gap-2">
+            <div class="w-9 h-9 rounded-xl bg-gradient-to-tr from-orange-500 to-amber-400 flex items-center justify-center text-white font-bold shadow-md">
+                NT
+            </div>
+            <div>
+                <h1 class="font-bold text-base text-gray-900 leading-none">Nuri Taahsib Mart</h1>
+                <span class="text-[10px] text-gray-500 font-medium">Online Shopping</span>
+            </div>
+        </div>
+
+        <div class="flex items-center gap-2">
+            <button onclick="promptAdminLogin()" class="p-2 text-xs font-semibold bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-lg transition">
+                <i class="fas fa-user-shield mr-1"></i> Admin
+            </button>
+        </div>
+    </header>
+
+    <!-- Main Container -->
+    <main class="max-w-md mx-auto p-4">
+
+        <!-- HOME TAB -->
+        <section id="tabHome" class="tab-content space-y-4">
+            <!-- Search Bar -->
+            <div class="relative">
+                <i class="fas fa-search absolute left-3.5 top-3.5 text-gray-400 text-sm"></i>
+                <input type="text" id="searchInput" onkeyup="handleSearch()" placeholder="Search products..." 
+                    class="w-full pl-10 pr-4 py-2.5 bg-white border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-orange-400 shadow-sm transition">
+            </div>
+
+            <!-- Category Pills -->
+            <div class="flex gap-2 overflow-x-auto pb-1 no-scrollbar text-xs font-medium">
+                <button onclick="filterCategory('All')" class="px-4 py-2 bg-orange-500 text-white rounded-full shadow-sm whitespace-nowrap">All Items</button>
+                <button onclick="filterCategory('Fashion')" class="px-4 py-2 bg-white text-gray-600 rounded-full border border-gray-200 whitespace-nowrap">Fashion</button>
+                <button onclick="filterCategory('Electronics')" class="px-4 py-2 bg-white text-gray-600 rounded-full border border-gray-200 whitespace-nowrap">Electronics</button>
+                <button onclick="filterCategory('Beauty')" class="px-4 py-2 bg-white text-gray-600 rounded-full border border-gray-200 whitespace-nowrap">Beauty</button>
+            </div>
+
+            <!-- Product Grid -->
+            <div id="productGrid" class="grid grid-cols-2 gap-3">
+                <!-- Products dynamically loaded from Firestore -->
+            </div>
+        </section>
+
+        <!-- CART TAB -->
+        <section id="tabCart" class="tab-content hidden space-y-4">
+            <h2 class="text-lg font-bold text-gray-800 mb-2">My Shopping Cart</h2>
+            <div id="cartItemsContainer" class="space-y-3">
+                <!-- Cart items here -->
+            </div>
+
+            <div class="glass-card p-4 rounded-2xl space-y-3 shadow-sm">
+                <div class="flex justify-between items-center text-sm font-semibold text-gray-700">
+                    <span>Total Amount:</span>
+                    <span class="text-lg font-extrabold text-orange-600">৳<span id="cartTotalPrice">0</span></span>
+                </div>
+                
+                <input type="text" id="checkoutAddress" placeholder="Delivery Address" class="w-full px-3 py-2 bg-white border rounded-xl text-xs focus:outline-none">
+                <input type="tel" id="checkoutPhone" placeholder="Mobile Number" class="w-full px-3 py-2 bg-white border rounded-xl text-xs focus:outline-none">
+                
+                <select id="paymentMethod" class="w-full px-3 py-2 bg-white border rounded-xl text-xs focus:outline-none">
+                    <option value="Cash on Delivery">Cash on Delivery</option>
+                    <option value="bKash / Nagad">bKash / Nagad</option>
+                </select>
+
+                <button onclick="placeOrder()" class="w-full py-3 bg-gradient-to-r from-orange-500 to-amber-500 text-white rounded-xl font-bold text-sm shadow-md active:scale-95 transition">
+                    Confirm Order
+                </button>
+            </div>
+        </section>
+
+        <!-- PROFILE TAB -->
+        <section id="tabProfile" class="tab-content hidden space-y-4">
+            <div class="glass-card p-5 rounded-3xl text-center shadow-sm relative">
+                <div id="userAvatar" class="w-20 h-20 mx-auto rounded-full bg-orange-100 flex items-center justify-center text-orange-500 text-3xl font-bold mb-3 shadow-inner overflow-hidden border-2 border-orange-400">
+                    <i class="fas fa-user"></i>
+                </div>
+                
+                <div class="flex items-center justify-center gap-2">
+                    <input type="text" id="userNameInput" value="dear User" class="text-lg font-bold text-center bg-transparent border-b border-transparent hover:border-gray-300 focus:border-orange-400 outline-none px-2 py-0.5 rounded">
+                    <button onclick="saveProfileName()" class="text-xs text-orange-500 hover:text-orange-600 font-semibold"><i class="fas fa-save"></i></button>
+                </div>
+                <span id="userRoleBadge" class="inline-block mt-1 text-[10px] bg-gray-100 text-gray-600 px-2.5 py-0.5 rounded-full font-medium">User</span>
+
+                <div class="mt-4 pt-4 border-t border-gray-200/60">
+                    <button onclick="loginWithGoogle()" class="w-full py-2.5 bg-white border border-gray-300 text-gray-700 font-semibold text-xs rounded-xl flex items-center justify-center gap-2 shadow-sm hover:bg-gray-50 active:scale-95 transition">
+                        <img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg" class="w-4 h-4" alt="Google">
+                        Sign in with Google
+                    </button>
+                </div>
+            </div>
+
+            <!-- Admin Product Upload (Visible to Admin Only) -->
+            <div id="adminProductForm" class="glass-card p-4 rounded-2xl hidden space-y-3 border-orange-200">
+                <h3 class="text-xs font-bold text-orange-600 uppercase tracking-wider"><i class="fas fa-plus-circle"></i> Add New Product (Live Sync)</h3>
+                <form onsubmit="handleProductUpload(event)" class="space-y-2">
+                    <input type="text" id="prodName" placeholder="Product Name" required class="w-full px-3 py-2 bg-white border rounded-xl text-xs">
+                    <div class="grid grid-cols-2 gap-2">
+                        <input type="number" id="prodPrice" placeholder="Price (৳)" required class="w-full px-3 py-2 bg-white border rounded-xl text-xs">
+                        <input type="number" id="prodOldPrice" placeholder="Old Price (৳)" class="w-full px-3 py-2 bg-white border rounded-xl text-xs">
+                    </div>
+                    <div class="grid grid-cols-2 gap-2">
+                        <select id="prodCategory" class="w-full px-3 py-2 bg-white border rounded-xl text-xs">
+                            <option value="Fashion">Fashion</option>
+                            <option value="Electronics">Electronics</option>
+                            <option value="Beauty">Beauty</option>
+                        </select>
+                        <input type="number" id="prodStock" placeholder="Stock Quantity" required class="w-full px-3 py-2 bg-white border rounded-xl text-xs">
+                    </div>
+                    <div>
+                        <label class="block text-[10px] text-gray-500 mb-1">Product Image</label>
+                        <input type="file" id="productImageInput" accept="image/*" class="w-full text-xs text-gray-500">
+                    </div>
+                    <button type="submit" class="w-full py-2.5 bg-orange-600 text-white rounded-xl text-xs font-bold shadow-md hover:bg-orange-700 transition">
+                        Upload Product to Store
+                    </button>
+                </form>
+            </div>
+
+            <!-- Order History -->
+            <div class="glass-card p-4 rounded-2xl shadow-sm">
+                <h3 class="font-bold text-sm text-gray-800 mb-3">Order History</h3>
+                <div id="orderHistoryList" class="text-xs text-gray-500">No orders placed yet.</div>
+            </div>
+        </section>
+
+    </main>
+
+    <!-- Product Details Modal -->
+    <div id="productModal" class="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 hidden flex items-end sm:items-center justify-center p-0 sm:p-4">
+        <div class="bg-white w-full sm:max-w-md rounded-t-3xl sm:rounded-3xl p-5 space-y-4 max-h-[90vh] overflow-y-auto relative">
+            <button onclick="closeModal()" class="absolute top-4 right-4 w-8 h-8 bg-gray-100 rounded-full flex items-center justify-center text-gray-500"><i class="fas fa-times"></i></button>
+            <div id="modalContent"></div>
+        </div>
+    </div>
+
+    <!-- Bottom Navigation Bar (iPhone Liquid Glass Style) -->
+    <nav class="fixed bottom-3 left-4 right-4 max-w-md mx-auto glass-nav rounded-3xl py-2.5 px-6 flex justify-around items-center z-40">
+        <button onclick="switchTab('home')" id="navHome" class="flex flex-col items-center text-orange-600 transition">
+            <i class="fas fa-home text-lg mb-0.5"></i>
+            <span class="text-[10px] font-medium">Home</span>
+        </button>
+        <button onclick="switchTab('cart')" id="navCart" class="flex flex-col items-center text-gray-400 relative transition">
+            <i class="fas fa-shopping-cart text-lg mb-0.5"></i>
+            <span class="text-[10px] font-medium">Cart</span>
+            <span id="cartBadge" class="absolute -top-1 right-1 bg-orange-600 text-white text-[9px] font-bold px-1.5 py-0.2 rounded-full hidden">0</span>
+        </button>
+        <button onclick="switchTab('profile')" id="navProfile" class="flex flex-col items-center text-gray-400 transition">
+            <i class="fas fa-user text-lg mb-0.5"></i>
+            <span class="text-[10px] font-medium">Profile</span>
+        </button>
+    </nav>
+
+    <!-- Application Script with Firebase & Firestore -->
+    <script>
+        // Firebase Configuration
+        const firebaseConfig = {
+          apiKey: "AIzaSyDlcFQsBCNL0yXzhRcmS2wE7g1qaE5xHTc",
+          authDomain: "nuritaahsibmart.firebaseapp.com",
+          projectId: "nuritaahsibmart",
+          storageBucket: "nuritaahsibmart.firebasestorage.app",
+          messagingSenderId: "571689160684",
+          appId: "1:571689160684:web:ff9c391e44d2e9b37abac9",
+          measurementId: "G-4R59ZGD9B7"
+        };
+
+        // Initialize Firebase & Firestore
+        firebase.initializeApp(firebaseConfig);
+        const auth = firebase.auth();
+        const db = firebase.firestore();
+        const googleProvider = new firebase.auth.GoogleAuthProvider();
+
+        let currentUser = {
+            name: localStorage.getItem('nuri_user_name') || 'dear User',
+            isAdmin: false
+        };
+
+        let products = [];
+        let cart = [];
+        let orders = [];
+
+        // Hide Splash Screen after 3.5s
+        window.addEventListener('DOMContentLoaded', () => {
+            setTimeout(() => {
+                const splash = document.getElementById('splashScreen');
+                splash.style.opacity = '0';
+                splash.style.transition = 'opacity 0.5s ease';
+                setTimeout(() => splash.classList.add('hidden'), 500);
+            }, 3500);
+
+            // Load initial username
+            document.getElementById('userNameInput').value = currentUser.name;
+        });
+
+        // Real-Time Firestore Sync for Products across devices
+        db.collection("products").onSnapshot((snapshot) => {
+            products = [];
+            snapshot.forEach((doc) => {
+                products.push({ id: doc.id, ...doc.data() });
+            });
+            renderProducts(products);
+        });
+
+        // Real Google Login using Redirect (Mobile Friendly)
+        function loginWithGoogle() {
+            auth.signInWithRedirect(googleProvider);
+        }
+
+        // Check redirect result on load
+        auth.getRedirectResult()
+            .then((result) => {
+                if (result && result.user) {
+                    const user = result.user;
+                    currentUser.name = user.displayName || 'dear User';
+                    localStorage.setItem('nuri_user_name', currentUser.name);
+                    document.getElementById('userNameInput').value = currentUser.name;
+                    if(user.photoURL) {
+                        document.getElementById('userAvatar').innerHTML = `<img src="${user.photoURL}" class="w-full h-full object-cover rounded-full">`;
+                    }
+                    alert(`Welcome, ${currentUser.name}! Google login successful.`);
+                }
+            })
+            .catch((error) => {
+                console.error("Login Error:", error);
+            });
+
+        // Save Custom Profile Name
+        function saveProfileName() {
+            const newName = document.getElementById('userNameInput').value.trim();
+            if(newName) {
+                currentUser.name = newName;
+                localStorage.setItem('nuri_user_name', newName);
+                alert("Profile name updated to: " + newName);
+            }
+        }
+
+        // Render Products to Home Grid
+        function renderProducts(items) {
+            const grid = document.getElementById('productGrid');
+            if (!grid) return;
+
+            if (items.length === 0) {
+                grid.innerHTML = `<p class="text-gray-500 italic col-span-2 text-center py-8 text-xs">No products found in store.</p>`;
+                return;
+            }
+
+            grid.innerHTML = items.map(prod => `
+                <div class="glass-card rounded-2xl overflow-hidden shadow-sm hover:shadow-md transition flex flex-col justify-between">
+                    <img src="${prod.image}" class="w-full h-32 object-cover" onclick="openModal('${prod.id}')">
+                    <div class="p-2.5 flex-1 flex flex-col justify-between">
+                        <div>
+                            <h3 class="font-bold text-xs text-gray-800 line-clamp-1">${prod.name}</h3>
+                            <div class="flex items-baseline gap-1 mt-0.5">
+                                <span class="text-xs font-extrabold text-orange-600">৳${prod.price}</span>
+                                ${prod.oldPrice ? `<span class="text-[10px] text-gray-400 line-through">৳${prod.oldPrice}</span>` : ''}
+                            </div>
+                        </div>
+                        <button onclick="addToCart('${prod.id}')" class="mt-2 w-full py-1.5 bg-orange-500 hover:bg-orange-600 text-white font-semibold text-[11px] rounded-lg transition active:scale-95">
+                            Add to Cart
+                        </button>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        // Search & Filter
+        function handleSearch() {
+            const query = document.getElementById('searchInput').value.toLowerCase();
+            const filtered = products.filter(p => p.name.toLowerCase().includes(query) || p.category.toLowerCase().includes(query));
+            renderProducts(filtered);
+        }
+
+        function filterCategory(cat) {
+            if (cat === 'All') renderProducts(products);
+            else renderProducts(products.filter(p => p.category === cat));
+        }
+
+        // Cart Management
+        function addToCart(id) {
+            const prod = products.find(p => p.id === id);
+            if (!prod) return;
+            cart.push(prod);
+            updateCartUI();
+            alert(`${prod.name} added to cart!`);
+        }
+
+        function updateCartUI() {
+            const badge = document.getElementById('cartBadge');
+            const container = document.getElementById('cartItemsContainer');
+            const totalEl = document.getElementById('cartTotalPrice');
+
+            if (badge) {
+                badge.innerText = cart.length;
+                if(cart.length > 0) badge.classList.remove('hidden');
+                else badge.classList.add('hidden');
+            }
+            if (!container || !totalEl) return;
+
+            if (cart.length === 0) {
+                container.innerHTML = `<p class="text-gray-400 italic text-center py-6 text-xs">Your cart is empty.</p>`;
+                totalEl.innerText = '0';
+                return;
+            }
+
+            let total = 0;
+            container.innerHTML = cart.map((item, index) => {
+                total += item.price;
+                return `
+                    <div class="glass-card p-3 rounded-xl flex items-center justify-between border">
+                        <div class="flex items-center space-x-3">
+                            <img src="${item.image}" class="w-12 h-12 object-cover rounded-lg">
+                            <div>
+                                <h5 class="font-semibold text-xs text-gray-800">${item.name}</h5>
+                                <span class="text-orange-600 font-bold text-xs">৳${item.price}</span>
+                            </div>
+                        </div>
+                        <button onclick="removeFromCart(${index})" class="text-red-500 text-xs font-semibold px-2 py-1">Remove</button>
+                    </div>
+                `;
+            }).join('');
+
+            totalEl.innerText = total;
+        }
+
+        function removeFromCart(index) {
+            cart.splice(index, 1);
+            updateCartUI();
+        }
+
+        function placeOrder() {
+            if (cart.length === 0) return alert('Your cart is empty!');
+            const address = document.getElementById('checkoutAddress').value;
+            const phone = document.getElementById('checkoutPhone').value;
+            if (!address || !phone) return alert('Please enter address and mobile number.');
+
+            const method = document.getElementById('paymentMethod').value;
+            const newOrder = {
+                id: "ORD-" + Math.floor(Math.random() * 900000 + 100000),
+                items: [...cart],
+                total: cart.reduce((a, b) => a + b.price, 0),
+                status: 'Processing',
+                payment: method,
+                address,
+                phone
+            };
+
+            orders.unshift(newOrder);
+            cart = [];
+            updateCartUI();
+            renderOrders();
+            alert(`Order Placed Successfully via ${method}! Order ID: ${newOrder.id}`);
+            switchTab('profile');
+        }
+
+        function renderOrders() {
+            const list = document.getElementById('orderHistoryList');
+            if (!list) return;
+            if (orders.length === 0) {
+                list.innerHTML = `<p class="text-gray-400 italic text-xs">No orders placed yet.</p>`;
+                return;
+            }
+
+            list.innerHTML = orders.map(ord => `
+                <div class="border-b pb-2 mb-2 text-xs">
+                    <div class="flex justify-between font-bold">
+                        <span>#${ord.id}</span>
+                        <span class="text-orange-600">${ord.status}</span>
+                    </div>
+                    <div class="text-gray-500 mt-0.5">Total: ৳${ord.total} (${ord.payment})</div>
+                    <div class="text-gray-600">Addr: ${ord.address}</div>
+                </div>
+            `).join('');
+        }
+
+        // Modal View
+        function openModal(id) {
+            const prod = products.find(p => p.id === id);
+            const content = document.getElementById('modalContent');
+            if (!prod || !content) return;
+
+            content.innerHTML = `
+                <img src="${prod.image}" class="w-full h-56 object-cover rounded-2xl mb-4 shadow">
+                <h3 class="text-lg font-extrabold text-gray-800 mb-1">${prod.name}</h3>
+                <div class="flex items-baseline space-x-2 mb-3">
+                    <span class="text-xl font-extrabold text-orange-600">৳${prod.price}</span>
+                    ${prod.oldPrice ? `<span class="text-gray-400 line-through text-xs">৳${prod.oldPrice}</span>` : ''}
+                </div>
+                <p class="text-xs text-gray-600 mb-4">Category: ${prod.category} | Status: In Stock (${prod.stock})</p>
+                <div class="grid grid-cols-2 gap-3">
+                    <button onclick="addToCart('${prod.id}'); closeModal();" class="bg-orange-100 text-orange-600 font-bold py-2.5 rounded-xl text-xs">Add to Cart</button>
+                    <button onclick="addToCart('${prod.id}'); closeModal(); switchTab('cart');" class="bg-orange-600 text-white font-bold py-2.5 rounded-xl text-xs">Buy Now</button>
+                </div>
+            `;
+            document.getElementById('productModal').classList.remove('hidden');
+        }
+
+        function closeModal() {
+            document.getElementById('productModal').classList.add('hidden');
+        }
+
+        // Admin Pass Check ('taahsibnuri009')
+        function promptAdminLogin() {
+            const pass = prompt("Enter Admin Password:");
+            if (pass === "taahsibnuri009") {
+                currentUser.isAdmin = true;
+                alert("Admin access granted successfully!");
+                updateAdminUI();
+                switchTab('profile');
+            } else if (pass !== null) {
+                alert("Incorrect password!");
+            }
+        }
+
+        function updateAdminUI() {
+            const badge = document.getElementById('userRoleBadge');
+            const adminForm = document.getElementById('adminProductForm');
+
+            if (currentUser.isAdmin) {
+                badge.innerText = 'Admin (Taahsib)';
+                badge.className = 'inline-block mt-1 text-[10px] bg-green-100 text-green-700 px-2.5 py-0.5 rounded-full font-medium';
+                adminForm.classList.remove('hidden');
+            } else {
+                badge.innerText = 'User';
+                badge.className = 'inline-block mt-1 text-[10px] bg-gray-100 text-gray-600 px-2.5 py-0.5 rounded-full font-medium';
+                adminForm.classList.add('hidden');
+            }
+        }
+
+        // Handle Product Upload & Save to Firestore
+        let uploadedImageBase64 = "";
+        const imageInput = document.getElementById('productImageInput');
+        if(imageInput) {
+            imageInput.addEventListener('change', function(e) {
+                const file = e.target.files[0];
+                if (file) {
+                    const reader = new FileReader();
+                    reader.onload = function(event) {
+                        uploadedImageBase64 = event.target.result;
+                    };
+                    reader.readAsDataURL(file);
+                }
+            });
+        }
+
+        function handleProductUpload(e) {
+            e.preventDefault();
+            if (!currentUser.isAdmin) return alert("Unauthorized action!");
+
+            const name = document.getElementById('prodName').value;
+            const price = parseFloat(document.getElementById('prodPrice').value);
+            const oldPrice = parseFloat(document.getElementById('prodOldPrice').value) || null;
+            const category = document.getElementById('prodCategory').value;
+            const stock = document.getElementById('prodStock').value;
+            const image = uploadedImageBase64 || 'https://via.placeholder.com/150';
+
+            const newProduct = {
+                name,
+                price,
+                oldPrice,
+                category,
+                stock,
+                image,
+                createdAt: firebase.firestore.FieldValue.serverTimestamp()
+            };
+
+            // Push to Firebase Firestore (Realtime across devices)
+            db.collection("products").add(newProduct)
+                .then(() => {
+                    alert('Product uploaded successfully to Firebase Live Store!');
+                    e.target.reset();
+                    uploadedImageBase64 = "";
+                    switchTab('home');
+                })
+                .catch((err) => {
+                    console.error("Upload error:", err);
+                    alert("Upload failed: " + err.message);
+                });
+        }
+
+        // Tab Navigation
+        function switchTab(tab) {
+            document.querySelectorAll('.tab-content').forEach(el => el.classList.add('hidden'));
+            const target = document.getElementById('tab' + tab.charAt(0).toUpperCase() + tab.slice(1));
+            if (target) target.classList.remove('hidden');
+
+            ['Home', 'Cart', 'Profile'].forEach(t => {
+                const nav = document.getElementById('nav' + t);
+                if (!nav) return;
+                if (t.toLowerCase() === tab) {
+                    nav.classList.add('text-orange-600');
+                    nav.classList.remove('text-gray-400');
+                } else {
+                    nav.classList.remove('text-orange-600');
+                    nav.classList.add('text-gray-400');
+                }
+            });
+        }
+    </script>
+</body>
+</html>
