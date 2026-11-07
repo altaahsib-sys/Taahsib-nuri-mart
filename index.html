@@ -51,7 +51,8 @@
 
             <!-- Search Bar -->
             <div class="flex-1 max-w-xl relative">
-                <input type="text" id="searchInput" oninput="handleSearch()" placeholder="Search for products, brands..." 
+                <input type="text" id="searchInput" onkeyup="handleSearch()" placeholder="Search for products, brands..." class="w-full pl-4 pr-10 py-2 rounded-full text-gray-800 text-sm focus:outline-none">
+
                        class="w-full pl-4 pr-10 py-2 rounded-full text-gray-800 text-sm focus:outline-none focus:ring-2 focus:ring-orange-300 shadow-inner">
                 <i class="fas fa-search absolute right-3 top-2.5 text-gray-400"></i>
             </div>
@@ -502,13 +503,13 @@ let products = JSON.parse(localStorage.getItem('nuri_products_v2')) || [];
 
             ['Home', 'Cart', 'Profile'].forEach(t => {
                 const nav = document.getElementById('nav' + t);
-                if (t.toLowerCase() === tab) {
-                    nav.classList.add('text-orange-600');
-                    nav.classList.remove('text-gray-500');
-                } else {
-                    nav.classList.remove('text-orange-600');
-                    nav.classList.add('text-gray-500');
-                }
+                // Initialize App
+window.onload = function() {
+    renderProducts();
+    updateCartUI();
+    checkAdminRole();
+};
+
             });
         }
 
