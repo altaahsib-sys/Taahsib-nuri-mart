@@ -507,6 +507,21 @@
         window.onload = function() {
             renderProducts();
             updateCartUI();
+    checkAdminRole();
+};
+
+let uploadedImageBase64 = "";
+
+document.getElementById('productImageInput').addEventListener('change', function(event) {
+    const file = event.target.files[0];
+    if (file) {
+        const reader = new FileReader();
+        reader.onload = function(e) {
+            uploadedImageBase64 = e.target.result;
+        };
+        reader.readAsDataURL(file);
+    }
+});
             checkAdminRole();
         };
     </script>
