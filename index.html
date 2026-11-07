@@ -279,9 +279,8 @@
             name: 'Taahsib',
             isAdmin: false
         };
-   
-// লোকাল স্টোরেজ থেকে প্রোডাক্ট লোড করবে, না থাকলে একদম খালি থাকবে
-let products = JSON.parse(localStorage.getItem('nuri_products')) || [];
+let products = JSON.parse(localStorage.getItem('nuri_products_v2')) || [];
+
 
         let cart = [];
         let orders = [];
