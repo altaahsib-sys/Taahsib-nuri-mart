@@ -232,6 +232,13 @@
                             <option value="Beauty">Beauty</option>
                         </select>
                     </div>
+<div class="mb-3">
+    <label class="block text-xs font-semibold mb-1 text-gray-600">Stock Status</label>
+    <select id="prodStock" class="w-full p-2.5 border rounded-lg text-sm bg-white">
+        <option value="In Stock">Stock In</option>
+        <option value="Stock Out">Stock Out</option>
+    </select>
+</div>
                     <div>
                         <label class="block text-xs font-semibold mb-1">Image URL</label>
                         <input type="file" id="productImageInput" accept="image/*">
@@ -280,11 +287,6 @@
             isAdmin: false
         };
 let products = JSON.parse(localStorage.getItem('nuri_products_v2')) || [];
-
-
-        let cart = [];
-        let orders = [];
-
         // Render Functions
         function renderProducts(items = products) {
             const grid = document.getElementById('productGrid');
@@ -458,16 +460,16 @@ let products = JSON.parse(localStorage.getItem('nuri_products_v2')) || [];
 
         function handleProductUpload(e) {
             e.preventDefault();
-            const name = document.getElementById('prodName').value;
-            const price = parseFloat(document.getElementById('prodPrice').value);
-function handleProductUpload(e) {
+  function handleProductUpload(e) {
     e.preventDefault();
     const name = document.getElementById('prodName').value;
     const price = parseFloat(document.getElementById('prodPrice').value);
     const oldPrice = parseFloat(document.getElementById('prodOldPrice').value) || null;
     const category = document.getElementById('prodCategory').value;
-    const stockStatus = document.getElementById('prodStock') ? document.getElementById('prodStock').value : 'In Stock';
-    const image = uploadedImageBase64;
+    
+    const stockEl = document.getElementById('prodStock');
+    const stockStatus = stockEl ? stockEl.value : 'In Stock';
+    const image = uploadedImageBase64 || '';
 
     const newProduct = {
         id: Date.now(),
@@ -484,6 +486,13 @@ function handleProductUpload(e) {
     products.unshift(newProduct);
     localStorage.setItem('nuri_products_v2', JSON.stringify(products));
 
+    renderProducts();
+    alert('Product added successfully to store!');
+    e.target.reset();
+    uploadedImageBase64 = "";
+    switchTab('home');
+}
+          
     renderProducts();
     alert('Product added successfully to store!');
     e.target.reset();
