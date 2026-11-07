@@ -266,33 +266,37 @@
         const googleProvider = new firebase.auth.GoogleAuthProvider();
 
         let currentUser = {
-            name: 'Taahsib User',
-            isAdmin: false
+            name: 'dear User',
+            isAdmin: only for admin
         };
 
         let products = JSON.parse(localStorage.getItem('nuri_products_v2')) || [];
         let cart = [];
         let orders = [];
 
-        // Real Google Login Function
+              // Real Google Login using Redirect (Best for Mobile)
         function loginWithGoogle() {
-            auth.signInWithPopup(googleProvider)
-                .then((result) => {
+            auth.signInWithRedirect(googleProvider);
+        }
+
+        // Check redirect result when page loads
+        auth.getRedirectResult()
+            .then((result) => {
+                if (result && result.user) {
                     const user = result.user;
                     currentUser.name = user.displayName;
-                    
-                    // Update Profile UI
                     document.getElementById('userNameDisplay').innerText = user.displayName;
                     if(user.photoURL) {
                         document.getElementById('userAvatar').innerHTML = `<img src="${user.photoURL}" class="w-full h-full object-cover">`;
                     }
                     alert(`Welcome, ${user.displayName}! Google login successful.`);
-                })
-                .catch((error) => {
-                    console.error("Login Error:", error);
-                    alert("Google Login Failed: " + error.message);
-                });
-        }
+                }
+            })
+            .catch((error) => {
+                console.error("Login Error:", error);
+                alert("Google Login Failed: " + error.message);
+            });
+  
 
         // Render Products
         function renderProducts(items = products) {
